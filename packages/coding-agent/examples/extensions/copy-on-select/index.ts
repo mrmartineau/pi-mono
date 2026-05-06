@@ -16,8 +16,19 @@
  * - or copy the directory into ~/.pi/agent/extensions/
  */
 
+import { appendFileSync } from "node:fs";
 import { copyToClipboard, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { sliceByColumn } from "@mariozechner/pi-tui";
+
+const DEBUG_LOG = process.env.PI_COPY_ON_SELECT_LOG;
+function dbg(msg: string): void {
+	if (!DEBUG_LOG) return;
+	try {
+		appendFileSync(DEBUG_LOG, `${new Date().toISOString()} ${msg}\n`);
+	} catch {
+		// Ignore logging errors.
+	}
+}
 
 interface Point {
 	x: number; // 1-indexed column
@@ -126,6 +137,7 @@ export default function (pi: ExtensionAPI) {
 
 		ctx.ui.setMouseReporting(true);
 		active = true;
+		dbg("session_start: mouse reporting enabled");
 
 		const clearHighlight = () => {
 			pressPoint = undefined;
@@ -143,6 +155,10 @@ export default function (pi: ExtensionAPI) {
 			const mouse = parseMouse(data);
 			if (!mouse) return undefined;
 
+			dbg(`mouse: button=${mouse.button} x=${mouse.x} y=${mouse.y} press=${mouse.press} drag=${mouse.drag}`);
+
+			// Skip wheel events (button & 64).
+			if ((mouse.button & 64) !== 0) return undefined;
 			// Track only the left mouse button.
 			const baseButton = mouse.button & 3;
 			if (baseButton !== 0) return undefined;
@@ -167,6 +183,7 @@ export default function (pi: ExtensionAPI) {
 				if (start.x === end.x && start.y === end.y) return undefined;
 
 				const text = extractSelection(ctx.ui.getRenderedLines(), start, end).trim();
+				dbg(`release: start=${start.x},${start.y} end=${end.x},${end.y} text=${JSON.stringify(text.slice(0, 80))}`);
 				if (text.length === 0) return undefined;
 
 				void copyToClipboard(text)
