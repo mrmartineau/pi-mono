@@ -263,6 +263,7 @@ export class TUI extends Container {
 	private previousViewportTop = 0; // Track previous viewport top for resize-aware cursor moves
 	private fullRedrawCount = 0;
 	private stopped = false;
+	private renderTap: ((lines: string[], width: number) => string[]) | undefined;
 
 	// Overlay stack for modal components rendered on top of base content
 	private focusOrderCounter = 0;
@@ -337,6 +338,22 @@ export class TUI extends Container {
 	 */
 	getRenderedLines(): string[] {
 		return this.previousLines.map((line) => stripAnsiCodes(line));
+	}
+
+	/**
+	 * Install (or clear) a render tap that post-processes rendered lines just
+	 * before they are diffed and written to the terminal. Used by extensions
+	 * that need to paint a transient overlay (e.g. selection highlight) on top
+	 * of the normal output without owning the render pipeline.
+	 *
+	 * The function receives the array of finalized lines and the current
+	 * viewport width and must return an array of the same length where each
+	 * line has the same visible width as the original. Calling this method
+	 * triggers a re-render so the new tap takes effect immediately.
+	 */
+	setRenderTap(fn: ((lines: string[], width: number) => string[]) | undefined): void {
+		this.renderTap = fn;
+		this.requestRender(true);
 	}
 
 	setFocus(component: Component | null): void {
@@ -967,6 +984,16 @@ export class TUI extends Container {
 		const cursorPos = this.extractCursorPosition(newLines, height);
 
 		newLines = this.applyLineResets(newLines);
+
+		// Allow extensions to overlay transient styling (e.g. selection highlight).
+		// The tap must preserve line count and visible width per line.
+		if (this.renderTap) {
+			try {
+				newLines = this.renderTap(newLines, width);
+			} catch {
+				// Tap errors must not break rendering.
+			}
+		}
 
 		// Helper to clear scrollback and viewport and render all new lines
 		const fullRender = (clear: boolean): void => {

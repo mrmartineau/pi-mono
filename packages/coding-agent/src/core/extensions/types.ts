@@ -295,6 +295,18 @@ export interface ExtensionUIContext {
 	 * a copy; mutating it has no effect on rendering.
 	 */
 	getRenderedLines(): string[];
+
+	/**
+	 * Install (or clear) a render tap that post-processes lines just before
+	 * they are written to the terminal. Useful for transient overlays such as
+	 * a mouse selection highlight. The function receives finalized rendered
+	 * lines and the current viewport width and must return an array of the
+	 * same length where each line preserves its original visible width.
+	 *
+	 * Calling this method triggers a re-render. Pass `undefined` to remove
+	 * the tap. No-op outside interactive mode.
+	 */
+	setRenderTap(fn: ((lines: string[], width: number) => string[]) | undefined): void;
 }
 
 // ============================================================================

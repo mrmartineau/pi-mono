@@ -310,6 +310,10 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			// No local terminal in RPC mode.
 			return [];
 		},
+
+		setRenderTap(_fn: ((lines: string[], width: number) => string[]) | undefined): void {
+			// Render tap requires a local TUI render pipeline.
+		},
 	});
 
 	runtimeHost.setRebindSession(async () => {

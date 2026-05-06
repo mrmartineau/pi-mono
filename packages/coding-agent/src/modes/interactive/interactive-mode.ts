@@ -1993,6 +1993,7 @@ export class InteractiveMode {
 			setToolsExpanded: (expanded) => this.setToolsExpanded(expanded),
 			setMouseReporting: (enabled) => this.ui.setMouseReporting(enabled),
 			getRenderedLines: () => this.ui.getRenderedLines(),
+			setRenderTap: (fn) => this.ui.setRenderTap(fn),
 		};
 	}
 
