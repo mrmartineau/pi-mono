@@ -221,6 +221,7 @@ const noOpUIContext: ExtensionUIContext = {
 	setToolsExpanded: () => {},
 	setMouseReporting: () => {},
 	getRenderedLines: () => [],
+	getViewportTop: () => 0,
 	setRenderTap: () => {},
 };
 

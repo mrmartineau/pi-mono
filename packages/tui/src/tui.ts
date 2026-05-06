@@ -341,6 +341,16 @@ export class TUI extends Container {
 	}
 
 	/**
+	 * Index in `getRenderedLines()` of the topmost line that is currently
+	 * visible in the terminal viewport. Mouse events report row coordinates
+	 * relative to the viewport (1-indexed), so the buffer index for a mouse
+	 * row `y` is `getViewportTop() + (y - 1)`.
+	 */
+	getViewportTop(): number {
+		return this.previousViewportTop;
+	}
+
+	/**
 	 * Install (or clear) a render tap that post-processes rendered lines just
 	 * before they are diffed and written to the terminal. Used by extensions
 	 * that need to paint a transient overlay (e.g. selection highlight) on top

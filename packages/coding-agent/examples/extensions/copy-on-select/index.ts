@@ -65,10 +65,10 @@ function orderPoints(a: Point, b: Point): [Point, Point] {
 	return [b, a];
 }
 
-function extractSelection(lines: string[], startPoint: Point, endPoint: Point): string {
+function extractSelection(lines: string[], startPoint: Point, endPoint: Point, viewportTop: number): string {
 	const [s, e] = orderPoints(startPoint, endPoint);
-	const startRow = Math.max(0, s.y - 1);
-	const endRow = Math.min(lines.length - 1, e.y - 1);
+	const startRow = Math.max(0, viewportTop + s.y - 1);
+	const endRow = Math.min(lines.length - 1, viewportTop + e.y - 1);
 	if (startRow > endRow) return "";
 
 	const startCol = Math.max(0, s.x - 1);
@@ -93,10 +93,14 @@ function highlightLine(line: string, width: number, fromCol: number, toCol: numb
 	return before + REVERSE_ON + middle + REVERSE_OFF + after;
 }
 
-function buildTap(startPoint: Point, endPoint: Point): (lines: string[], width: number) => string[] {
+function buildTap(
+	startPoint: Point,
+	endPoint: Point,
+	viewportTop: number,
+): (lines: string[], width: number) => string[] {
 	const [s, e] = orderPoints(startPoint, endPoint);
-	const startRow = s.y - 1;
-	const endRow = e.y - 1;
+	const startRow = viewportTop + s.y - 1;
+	const endRow = viewportTop + e.y - 1;
 	const startCol = Math.max(0, s.x - 1);
 	const endCol = Math.max(0, e.x);
 
@@ -147,7 +151,7 @@ export default function (pi: ExtensionAPI) {
 
 		const updateHighlight = () => {
 			if (!pressPoint || !currentPoint) return;
-			ctx.ui.setRenderTap(buildTap(pressPoint, currentPoint));
+			ctx.ui.setRenderTap(buildTap(pressPoint, currentPoint, ctx.ui.getViewportTop()));
 		};
 
 		unsubscribeInput = ctx.ui.onTerminalInput((data) => {
@@ -182,8 +186,11 @@ export default function (pi: ExtensionAPI) {
 				if (!start) return undefined;
 				if (start.x === end.x && start.y === end.y) return undefined;
 
-				const text = extractSelection(ctx.ui.getRenderedLines(), start, end).trim();
-				dbg(`release: start=${start.x},${start.y} end=${end.x},${end.y} text=${JSON.stringify(text.slice(0, 80))}`);
+				const viewportTop = ctx.ui.getViewportTop();
+				const text = extractSelection(ctx.ui.getRenderedLines(), start, end, viewportTop).trim();
+				dbg(
+					`release: start=${start.x},${start.y} end=${end.x},${end.y} viewportTop=${viewportTop} text=${JSON.stringify(text.slice(0, 80))}`,
+				);
 				if (text.length === 0) return undefined;
 
 				void copyToClipboard(text)

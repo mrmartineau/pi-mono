@@ -297,6 +297,14 @@ export interface ExtensionUIContext {
 	getRenderedLines(): string[];
 
 	/**
+	 * Index in `getRenderedLines()` of the topmost line currently visible in
+	 * the terminal viewport. Mouse events report 1-indexed viewport rows, so
+	 * the buffer index for a mouse row `y` is `getViewportTop() + (y - 1)`.
+	 * Returns 0 outside interactive mode.
+	 */
+	getViewportTop(): number;
+
+	/**
 	 * Install (or clear) a render tap that post-processes lines just before
 	 * they are written to the terminal. Useful for transient overlays such as
 	 * a mouse selection highlight. The function receives finalized rendered

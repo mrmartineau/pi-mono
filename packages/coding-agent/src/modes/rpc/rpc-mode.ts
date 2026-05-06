@@ -311,6 +311,10 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			return [];
 		},
 
+		getViewportTop(): number {
+			return 0;
+		},
+
 		setRenderTap(_fn: ((lines: string[], width: number) => string[]) | undefined): void {
 			// Render tap requires a local TUI render pipeline.
 		},
